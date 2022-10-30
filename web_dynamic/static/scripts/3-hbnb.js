@@ -1,46 +1,41 @@
-// Script that is executed only when DOM is loaded with jQuery
-
-let checked_box = {};
 $(document).ready(function () {
-    $('input:checkbox').change(function () {
-	if ($(this).is(':checked_box')) {
-	    checked_box[$(this).data('id')] = $(this).data('name');
-	}
-	else {
-	    delete checked_box[$(this).data('id')];
-	}
-	$('div.amenities h4').html(function () {
-	    let amenities = [];
-	    Object.keys(checked_box).forEach(function (key) {
-		amenities.push(checked_box[key]);
-	    });
-	    if (amenities.length === 0) {
-		return ('&nbsp');
-	    }
-	    return (amenities.join(', '));
-	});
+    let amenties = {};
+    $(document).on('change', "input[type='checkbox']", function () {
+        if (this.checked) {
+            amenties[$(this).data('id')] = $(this).data('name');
+        } else {
+            delete amenties[$(this).data('id')];
+        }
+        let lst = Object.values(amenties);
+        if (lst.length > 0) {
+            $('div.amenities > h4').text(Object.values(amenties).join(', '));
+        } else {
+            $('div.amenities > h4').html('&nbsp;');
+        }
     });
 
+    $.ajax({
+        url: 'http://localhost:5001/api/v1/status/',
+        success: result => {
+            if (result.status === 'OK') {
+                $('div#api_status').addClass('available');
+            } else {
+                $('div#api_status').removeClass('available');
+            }
+        }
+    });
 
-const apiStatus = $('DIV#api_status');
-$.ajax('http://0.0.0.0:5001/api/v1/status/').done(function (data) {
-    if (data.status === 'OK') {
-      apiStatus.addClass('available');
-    } else {
-      apiStatus.removeClass('available');
-    }
-  });
-  });
-
-
-$.ajax({
-    type: 'POST',
-    url: 'http://0.0.0.0:5001/api/v1/places_search/',
-    contentType: 'application/json',
-    data: '{}',
-    success: function (data) {
-	for (let currentPlace of data) {
-	    $('.places').append('<article> <div class="title"> <h2>' + currentPlace.name + '</h2><div class="price_by_night">' + '$' + currentPlace.price_by_night + '</div></div> <div class="information"> <div class="max_guest"> <i class="fa fa -users fa-3x" aria-hidden="true"></i><br />' + currentPlace.max_guest + ' Guests</div><div class="number_rooms"> <i class="fa fa -users fa-3x" aria-hidden="true"></i><br />' + currentPlace.number_rooms + ' Bedrooms</div><div class="number_bathrooms"> <i class="fa fa -users fa-3x" aria-hidden="true"></i><br />' + currentPlace.number_bathrooms + ' Bathroom </div></div> <div class="user"></div><div class="description">' + '$' + currentPlace.description + '</div></article>');
-	}
-    }
+    $.ajax({
+        url: 'http://localhost:5001/api/v1/places_search',
+        type: 'POST',
+        data: JSON.stringify({}),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: result => {
+            for (let i = 0; i < data.length; i++) {
+                let place = data[i];
+                $('.places ').append('<article><h2>' + place.name + '</h2><div class="price_by_night"><p>$' + place.price_by_night + '</p></div><div class="information"><div class="max_guest"><div class="guest_image"></div><p>' + place.max_guest + '</p></div><div class="number_rooms"><div class="bed_image"></div><p>' + place.number_rooms + '</p></div><div class="number_bathrooms"><div class="bath_image"></div><p>' + place.number_bathrooms + '</p></div></div><div class="description"><p>' + place.description + '</p></div></article>');
+            }
+        }
+    })
 });
